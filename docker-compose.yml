@@ -2,12 +2,18 @@ version: '3.8'
 
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:16-alpine
     environment:
-      SA_PASSWORD: "YourStrong@Passw0rd"
-      ACCEPT_EULA: "Y"
+      POSTGRES_DB: TodoDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "1433:1433"
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api:
     build: .
@@ -15,9 +21,10 @@ services:
       - "3087:3087"
     environment:
       ASPNETCORE_URLS: "http://+:3087"
-      ConnectionStrings__DefaultConnection: "Server=db;Database=TodoDb;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=TodoDb;Username=postgres;Password=postgres"
       Jwt__Key: "super-secret-key-minimum-32-characters-long!"
       Jwt__Issuer: "Todo.Api"
       Jwt__Audience: "Todo.Api"
     depends_on:
-      - db
+      db:
+        condition: service_healthy

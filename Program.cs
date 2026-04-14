@@ -4,6 +4,7 @@ using Todo.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace Todo.Api
 {
@@ -28,12 +29,9 @@ namespace Todo.Api
 
             //database connection
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(
+                options.UseNpgsql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
-                    sqlOptions => sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(10),
-                        errorNumbersToAdd: null)));
+                    sqlOptions => sqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
 
             builder.Services.AddScoped<AuthService>(); // controllers can now ask about AuthService
 
@@ -75,7 +73,7 @@ namespace Todo.Api
 
             //app.UseHttpsRedirection(); //rediraction to https
 
-            app.UseCors("AllowFrontend");
+            app.UseCors("AllowFrontend"); // just to allow frontend
 
             app.UseAuthentication(); // from who we got the request
 
